@@ -2,12 +2,13 @@
   "name": "Hermes Agent",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers/features/sshd:1": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   "forwardPorts": [
+    8648,
     9119
   ],
   "remoteUser": "vscode",
-  "postCreateCommand": "docker compose up -d && echo 'Hermes ready on port 9119' > /tmp/hermes_ready.txt"
+  "postCreateCommand": "chmod +x start_services.sh && bash start_services.sh &",
+  "postStartCommand": "bash start_services.sh &"
 }
