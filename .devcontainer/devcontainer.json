@@ -8,5 +8,6 @@
   "forwardPorts": [
     9119
   ],
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "postCreateCommand": "docker compose up -d && echo 'Hermes ready on port 9119' > /tmp/hermes_ready.txt"
 }
