@@ -7,6 +7,6 @@
   "forwardPorts": [
     9119
   ],
-  "postStartCommand": "setsid bash /workspaces/7Kmcdashou/full_deploy.sh > /tmp/hermes-deploy.log 2>&1 &",
+  "postCreateCommand": "bash /workspaces/7Kmcdashou/full_deploy.sh",
   "remoteUser": "vscode"
 }
