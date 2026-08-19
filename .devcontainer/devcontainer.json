@@ -7,12 +7,7 @@
   "forwardPorts": [
     9119
   ],
-  "portsAttributes": {
-    "9119": {
-      "label": "Hermes Dashboard",
-      "onAutoForward": "openPreview"
-    }
-  },
-  "postCreateCommand": "nohup bash /workspaces/7Kmcdashou/deploy.sh > /tmp/hermes-deploy.log 2>&1 &",
+  "postCreateCommand": "bash /workspaces/7Kmcdashou/deploy.sh",
+  "postStartCommand": "bash /workspaces/7Kmcdashou/start_tunnel.sh",
   "remoteUser": "vscode"
 }
