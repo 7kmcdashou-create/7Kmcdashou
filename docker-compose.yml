@@ -1,6 +1,6 @@
 services:
   hermes-agent:
-    image: ghcr.io/nousresearch/hermes-agent:v0.20.4
+    image: nousresearch/hermes-agent:latest
     ports:
       - "9119:9119"
     command: ["dashboard", "--host", "0.0.0.0", "--no-open"]
