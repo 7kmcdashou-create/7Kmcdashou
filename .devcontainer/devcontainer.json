@@ -1,16 +1,18 @@
 {
   "name": "Hermes Agent",
-  "dockerComposeFile": "docker-compose.yml",
-  "service": "hermes-agent",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
   "forwardPorts": [
     9119
   ],
   "portsAttributes": {
     "9119": {
       "label": "Hermes Dashboard",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "openPreview"
     }
   },
-  "postCreateCommand": "bash /workspaces/7Kmcdashou/deploy.sh >> /tmp/hermes-deploy.log 2>&1 &",
-  "remoteUser": "root"
+  "postCreateCommand": "nohup bash /workspaces/7Kmcdashou/deploy.sh > /tmp/hermes-deploy.log 2>&1 &",
+  "remoteUser": "vscode"
 }
