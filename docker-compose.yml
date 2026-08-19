@@ -1,0 +1,16 @@
+services:
+  hermes-agent:
+    image: ghcr.io/nousresearch/hermes-agent:v0.20.4
+    container_name: hermes-agent
+    ports:
+      - "9119:9119"
+    environment:
+      - HERMES_UID=1000
+      - HERMES_GID=1000
+    volumes:
+      - hermes-data:/opt/data
+    restart: unless-stopped
+    command: ["dashboard", "--host", "0.0.0.0", "--no-open"]
+
+volumes:
+  hermes-data:
