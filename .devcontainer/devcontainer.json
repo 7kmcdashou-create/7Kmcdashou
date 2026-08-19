@@ -1,11 +1,12 @@
 {
   "name": "Hermes Agent",
-  "dockerComposeFile": "../docker-compose.yml",
-  "service": "hermes-agent",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
   "forwardPorts": [
-    8648,
     9119
   ],
   "remoteUser": "vscode",
-  "postStartCommand": "nohup bash -c 'npm install -g hermes-web-ui 2>&1 | tee /tmp/npm.log && hermes-web-ui start 8648 --no-open 2>&1 | tee /tmp/webui.log' > /dev/null 2>&1 &"
+  "postCreateCommand": "docker compose up -d 2>&1 | tee /tmp/docker_setup.log"
 }
