@@ -1,0 +1,16 @@
+{
+  "name": "Hermes Agent",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "hermes-agent",
+  "forwardPorts": [
+    9119
+  ],
+  "portsAttributes": {
+    "9119": {
+      "label": "Hermes Dashboard",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postCreateCommand": "bash /workspaces/7Kmcdashou/deploy.sh >> /tmp/hermes-deploy.log 2>&1 &",
+  "remoteUser": "root"
+}
