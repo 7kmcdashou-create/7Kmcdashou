@@ -3,10 +3,16 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers/features/node:1": {"version": "20", "nodeGypDependencies": ""},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20",
+      "nodeGypDependencies": ""
+    },
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "forwardPorts": [9119, 8648],
+  "forwardPorts": [
+    9119,
+    8648
+  ],
   "remoteUser": "vscode",
-  "postCreateCommand": "set -e; LOG=/tmp/hermes_full_setup.log; echo === $(date) Full setup start === > $LOG; echo '[1/3] Starting Docker...' >> $LOG; cd $CODESPACE_VSCODE_FOLDER; docker compose up -d >> $LOG 2>&1; docker compose ps >> $LOG 2>&1; echo '[2/3] Installing hermes-web-ui...' >> $LOG; npm install -g hermes-web-ui >> $LOG 2>&1; echo '[3/3] Starting hermes-web-ui on 8648...' >> $LOG; nohup hermes-web-ui start 8648 --no-open >> $LOG 2>&1 & sleep 3; ss -tlnp | grep -E 8648\\|9119 >> $LOG 2>&1; echo === Setup done at $(date) === >> $LOG"
+  "postCreateCommand": "set -e\nLOG=/tmp/hermes_setup.log\nexec > >(tee \"$LOG\") 2>&1\necho \"STARTED $(date)\"\n\n# Wait for Docker daemon (DinD takes time to init)\necho \"Waiting for Docker daemon...\"\nfor i in $(seq 1 60); do\n  docker info &>/dev/null && echo \"Docker ready after $((i*2))s\" && break\n  sleep 2\ndone\n\n# Start Hermes Agent container\necho \"Starting Docker compose...\"\ncd ${CODESPACE_VSCODE_FOLDER:-/workspaces/7Kmcdashou}\ndocker compose up -d 2>&1\necho \"Waiting 10s for container init...\"\nsleep 10\ndocker ps -a\n\n# Install hermes-web-ui\necho \"Installing hermes-web-ui...\"\nnpm install -g hermes-web-ui 2>&1 | tail -5\n\n# Start hermes-web-ui\necho \"Starting hermes-web-ui on 8648...\"\nnohup hermes-web-ui start 8648 --no-open >/dev/null 2>&1 &\nsleep 5\n\n# Port check\necho \"Port check:\"\nss -tlnp | grep -E \"8648|9119\" || echo \"ports not found\"\n\necho \"COMPLETED $(date)\"\necho DONE > /tmp/setup_complete\n"
 }
