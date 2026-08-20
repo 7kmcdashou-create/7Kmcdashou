@@ -31,29 +31,18 @@ if [ -n "$TUNNEL_URL" ]; then
     echo "TUNNEL_URL=$TUNNEL_URL" > /tmp/tunnel-url.txt
     echo "Tunnel ready: $TUNNEL_URL"
     
-    # Push tunnel URL to GitHub repo via API (bypasses git auth issues)
-    if [ -n "$GITHUB_PAT" ]; then
-        echo "Pushing via GitHub API..."
-        ENCODED_URL=$(echo -n "$TUNNEL_URL" | base64 -w 0)
-        curl -s -X PUT             -H "Authorization: token $GITHUB_PAT"             -H "Content-Type: application/json"             -d '{"message":"tunnel: update url","content":"'"$ENCODED_URL"'"}'             "https://api.github.com/repos/7kmcdashou-create/7Kmcdashou/contents/.tunnel-url"             >> /tmp/hermes-start.log 2>&1
-        echo "API push result: $?"
-    else
-        echo "WARNING: GITHUB_PAT not set, cannot push via API"
-        # Fallback to git push
-        cd /workspaces/7Kmcdashou
-        echo "$TUNNEL_URL" > .tunnel-url
-        git add .tunnel-url
-        git -c user.email="bot@hermes.local" -c user.name="Hermes" commit -m "tunnel: update url" 2>/dev/null || true
-        git push 2>&1 | tee -a /tmp/hermes-start.log || echo "Git push failed" >> /tmp/hermes-start.log
-    fi
+    # Push tunnel URL via gh api (codespace gh is pre-authenticated)
+    ENCODED_URL=$(echo -n "$TUNNEL_URL" | base64 -w 0)
+    gh api -X PUT repos/7kmcdashou-create/7Kmcdashou/contents/.tunnel-url         -f message="tunnel: update url"         -f content="$ENCODED_URL"         >> /tmp/hermes-start.log 2>&1
+    echo "gh api push result: $?"
 else
     echo "WARNING: No tunnel URL found after 30s"
-    echo "--- cloudflared.log contents ---"
+    echo "--- cloudflared.log ---"
     cat /tmp/cloudflared.log 2>&1
-    echo "--- hermes-dashboard.log tail ---"
+    echo "--- dashboard log ---"
     tail -5 /tmp/hermes-dashboard.log 2>&1
-    which cloudflared && echo "cloudflared found" || echo "cloudflared NOT found"
-    which hermes && echo "hermes found" || echo "hermes NOT found"
+    which cloudflared && echo "cloudflared OK" || echo "cloudflared MISSING"
+    which hermes && echo "hermes OK" || echo "hermes MISSING"
 fi
 
 echo "=== Hermes start completed ==="
