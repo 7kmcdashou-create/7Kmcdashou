@@ -1,48 +1,24 @@
 #!/bin/bash
 set -x
-
-echo "=== Hermes start at $(date) ==="
-
-# Kill any existing processes
-pkill -f "hermes dashboard" 2>/dev/null || true
+exec > /tmp/hermes-start.log 2>&1
+echo "=== Start $(date) ==="
+pkill -f 'hermes dashboard' 2>/dev/null || true
 pkill -f cloudflared 2>/dev/null || true
 sleep 1
-
-# Start hermes dashboard on 0.0.0.0:9119
-nohup hermes dashboard --host 0.0.0.0 --port 9119 --no-open --skip-build >> /tmp/hermes-dashboard.log 2>&1 &
+nohup hermes dashboard --host 0.0.0.0 --port 9119 --skip-build --no-open > /tmp/hermes-dashboard.log 2>&1 &
 echo "Dashboard PID: $!"
 sleep 5
-
-# Start cloudflared tunnel to expose dashboard publicly
-nohup cloudflared tunnel --url http://localhost:9119 > /tmp/cloudflared.log 2>&1 &
-echo "Cloudflared PID: $!"
-
-# Wait for cloudflared to start and capture the URL (try up to 30s)
-for i in $(seq 1 6); do
-    sleep 5
-    TUNNEL_URL=$(grep -oE 'https://[a-z0-9-]+[.]trycloudflare[.]com' /tmp/cloudflared.log 2>/dev/null | head -1)
-    echo "Attempt $i: TUNNEL_URL=$TUNNEL_URL"
-    if [ -n "$TUNNEL_URL" ]; then
-        break
-    fi
+nohup cloudflared tunnel --url http://localhost:9119 > /tmp/cf.log 2>&1 &
+echo "CF PID: $!"
+TUNNEL_URL=""
+for i in $(seq 1 20); do
+  sleep 3
+  TUNNEL_URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cf.log | head -1)
+  [ -n "$TUNNEL_URL" ] && break
 done
-
 if [ -n "$TUNNEL_URL" ]; then
-    echo "TUNNEL_URL=$TUNNEL_URL" > /tmp/tunnel-url.txt
-    echo "Tunnel ready: $TUNNEL_URL"
-    
-    # Push tunnel URL via gh api (codespace gh is pre-authenticated)
-    ENCODED_URL=$(echo -n "$TUNNEL_URL" | base64 -w 0)
-    gh api -X PUT repos/7kmcdashou-create/7Kmcdashou/contents/.tunnel-url         -f message="tunnel: update url"         -f content="$ENCODED_URL"         >> /tmp/hermes-start.log 2>&1
-    echo "gh api push result: $?"
-else
-    echo "WARNING: No tunnel URL found after 30s"
-    echo "--- cloudflared.log ---"
-    cat /tmp/cloudflared.log 2>&1
-    echo "--- dashboard log ---"
-    tail -5 /tmp/hermes-dashboard.log 2>&1
-    which cloudflared && echo "cloudflared OK" || echo "cloudflared MISSING"
-    which hermes && echo "hermes OK" || echo "hermes MISSING"
+  echo "TUNNEL: $TUNNEL_URL"
+  ENCODED=$(python3 -c "import base64; print(base64.b64encode(b'$TUNNEL_URL').decode())")
+  curl -s -X PUT -H "Authorization: token $GITHUB_TOKEN"     -H "Content-Type: application/json"     "https://api.github.com/repos/7kmcdashou-create/7Kmcdashou/contents/.tunnel-url"     -d '{"message":"tunnel","content":"'"$ENCODED"'"}'
 fi
-
-echo "=== Hermes start completed ==="
+echo "=== Done $(date) ==="
