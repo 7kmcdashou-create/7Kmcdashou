@@ -6,5 +6,5 @@
     8648
   ],
   "remoteUser": "vscode",
-  "postAttachCommand": "bash /workspaces/7Kmcdashou/.devcontainer/setup.sh"
+  "postCreateCommand": "bash /workspaces/7Kmcdashou/.devcontainer/setup.sh"
 }
