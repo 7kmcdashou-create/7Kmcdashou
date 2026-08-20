@@ -8,7 +8,7 @@
   "remoteUser": "vscode",
   "containerEnv": {
     "OPENAI_API_KEY": "sk-Ui5cfObCJhJUbcsJSWJOUmZeabOIgPvm",
-    "OPENAI_BASE_URL": "https://api.sensenova.cn/compatible-mode/v2"
+    "OPENAI_BASE_URL": "https://token.sensenova.cn/v1"
   },
   "postAttachCommand": "nohup bash /workspaces/7Kmcdashou/.devcontainer/setup.sh &>/dev/null &"
 }
