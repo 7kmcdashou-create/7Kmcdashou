@@ -1,14 +1,11 @@
 {
   "name": "Hermes Agent",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "forwardPorts": [
-    9119,
-    8648
-  ],
+  "forwardPorts": [9119],
   "remoteUser": "vscode",
   "containerEnv": {
-    "OPENAI_API_KEY": "sk-Ui5cfObCJhJUbcsJSWJOUmZeabOIgPvm",
-    "OPENAI_BASE_URL": "https://token.sensenova.cn/v1"
+    "OPENAI_API_KEY": "sk-Ui5cfObCJhJUbcsJSWJOUmZeabOIgPvm"
   },
-  "postAttachCommand": "nohup bash /workspaces/7Kmcdashou/.devcontainer/setup.sh &>/dev/null &"
+  "postCreateCommand": "bash /workspaces/7Kmcdashou/.devcontainer/setup.sh >> /tmp/hermes-setup.log 2>&1; echo SETUP_DONE >> /tmp/hermes-setup.log",
+  "postStartCommand": "bash /workspaces/7Kmcdashou/.devcontainer/start.sh >> /tmp/hermes-start.log 2>&1"
 }
