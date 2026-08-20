@@ -2,11 +2,11 @@
   "name": "Hermes Agent",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/node:1": {"version": "20", "nodeGypDependencies": ""},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "forwardPorts": [
-    9119
-  ],
+  "forwardPorts": [9119, 8648],
   "remoteUser": "vscode",
-  "postCreateCommand": "docker compose up -d 2>&1 | tee /tmp/docker_setup.log"
+  "postCreateCommand": "set -e; LOG=/tmp/hermes_full_setup.log; echo === $(date) Full setup start === > $LOG; echo '[1/3] Starting Docker...' >> $LOG; cd $CODESPACE_VSCODE_FOLDER; docker compose up -d >> $LOG 2>&1; docker compose ps >> $LOG 2>&1; echo '[2/3] Installing hermes-web-ui...' >> $LOG; npm install -g hermes-web-ui >> $LOG 2>&1; echo '[3/3] Starting hermes-web-ui on 8648...' >> $LOG; nohup hermes-web-ui start 8648 --no-open >> $LOG 2>&1 & sleep 3; ss -tlnp | grep -E 8648\\|9119 >> $LOG 2>&1; echo === Setup done at $(date) === >> $LOG"
 }
