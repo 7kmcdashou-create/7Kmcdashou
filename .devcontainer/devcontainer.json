@@ -1,12 +1,10 @@
 {
   "name": "Hermes Agent",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
-  },
   "forwardPorts": [
     9119,
     8648
   ],
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "postStartCommand": "nohup bash /workspaces/7Kmcdashou/start_services.sh >/dev/null 2>&1 &"
 }
