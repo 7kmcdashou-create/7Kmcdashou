@@ -13,6 +13,5 @@
     9119,
     8648
   ],
-  "remoteUser": "vscode",
-  "postCreateCommand": "bash /workspaces/7Kmcdashou/start_services.sh"
+  "remoteUser": "vscode"
 }
