@@ -5,5 +5,6 @@
     9119,
     8648
   ],
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "postAttachCommand": "nohup bash -c 'LOG=/tmp/setup.log; echo start $(date) > $LOG; curl -fsSL https://get.docker.com | sudo bash >> $LOG 2>&1 && sudo usermod -aG docker vscode >> $LOG 2>&1 && sg docker -c \"cd /workspaces/7Kmcdashou && sudo docker compose up -d >> $LOG 2>&1 && sleep 10 && npm install -g hermes-web-ui >> $LOG 2>&1 && nohup hermes-web-ui start 8648 --no-open >> $LOG 2>&1 & sleep 5 && ss -tlnp >> $LOG 2>&1 && echo done $(date) >> $LOG\"' &>/dev/null &"
 }
