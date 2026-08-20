@@ -1,73 +1,66 @@
 #!/bin/bash
 LOG=/tmp/hermes_setup.log
-echo "=== $(date) Setup started ===" > $LOG
+exec > >(tee -a "$LOG") 2>&1
+echo "=== $(date) Setup started ==="
 
-# Phase 1: Install Docker CE
-if ! command -v docker &>/dev/null; then
-  echo "Installing Docker CE..." >> $LOG
-  apt-get update -qq >> $LOG 2>&1 || true
-  apt-get install -y -qq apt-transport-https ca-certificates curl gnupg lsb-release >> $LOG 2>&1 || true
-  curl -fsSL https://get.docker.com -o /tmp/get-docker.sh >> $LOG 2>&1
-  if [ -f /tmp/get-docker.sh ]; then
-    sudo bash /tmp/get-docker.sh >> $LOG 2>&1 || true
-  else
-    echo "Failed to download Docker install script" >> $LOG
-    # Fallback: install from Ubuntu repo
-    sudo apt-get install -y -qq docker.io >> $LOG 2>&1 || true
-  fi
-  sudo usermod -aG docker vscode >> $LOG 2>&1 || true
-  echo "Docker install attempted" >> $LOG
-else
-  echo "Docker already present" >> $LOG
+# Add pipx to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Install pipx if needed
+if ! command -v pipx &>/dev/null; then
+  echo "Installing pipx..."
+  python3 -m pip install --user pipx 2>&1 || true
+  python3 -m pipx ensurepath 2>&1 || true
+  export PATH="$HOME/.local/bin:$PATH"
 fi
 
-# Phase 2: Wait for Docker daemon (up to 60s)
-echo "Waiting for Docker daemon..." >> $LOG
-DOCKER_READY=0
-for i in $(seq 1 60); do
-  if sudo docker info >/dev/null 2>&1; then
-    DOCKER_READY=1
-    echo "Docker daemon ready after ${i}s" >> $LOG
-    break
-  fi
-  sleep 1
-done
-
-if [ "$DOCKER_READY" = "0" ]; then
-  echo "WARNING: Docker daemon not ready after 60s" >> $LOG
-  # Try starting it manually
-  sudo dockerd >> $LOG 2>&1 &
-  sleep 5
+# Install hermes-agent via pipx
+if ! command -v hermes &>/dev/null; then
+  echo "Installing hermes-agent via pipx..."
+  pipx install hermes-agent 2>&1 || {
+    echo "pipx failed, trying pip direct..."
+    pip install --user hermes-agent 2>&1 || true
+  }
 fi
 
-# Phase 3: Start Hermes Agent container
-echo "Starting Hermes Agent..." >> $LOG
-cd /workspaces/7Kmcdashou || true
-sudo docker compose pull >> $LOG 2>&1 || true
-sudo docker compose up -d >> $LOG 2>&1 || true
+echo "Hermes version:" $(hermes --version 2>&1 || echo "not found")
 
-# Wait for container to be running
-echo "Waiting for Hermes container..." >> $LOG
+# Start Hermes dashboard on port 9119 in background
+echo "Starting Hermes dashboard..."
+nohup hermes dashboard --host 0.0.0.0 --port 9119 --no-open > /tmp/hermes_dashboard.log 2>&1 &
+HERMES_PID=$!
+echo "Hermes PID: $HERMES_PID"
+
+# Wait for Hermes to start
+echo "Waiting for Hermes dashboard..."
 for i in $(seq 1 30); do
-  if sudo docker ps | grep -q hermes-agent >> $LOG 2>&1; then
-    echo "Hermes container running" >> $LOG
+  if curl -s http://localhost:9119 >/dev/null 2>&1; then
+    echo "Hermes dashboard ready after ${i}x2s"
     break
   fi
   sleep 2
 done
 
-# Phase 4: Install and start hermes-web-ui
-echo "Installing hermes-web-ui..." >> $LOG
-npm install -g hermes-web-ui >> $LOG 2>&1 || true
+# Install hermes-web-ui via npm
+echo "Installing hermes-web-ui..."
+npm install -g hermes-web-ui 2>&1 || true
 
-# Start web UI in background
-nohup hermes-web-ui start 8648 --no-open >> $LOG 2>&1 &
-sleep 8
+# Start hermes-web-ui on port 8648
+echo "Starting hermes-web-ui..."
+nohup hermes-web-ui start 8648 --no-open > /tmp/hermes_webui.log 2>&1 &
+WEBUI_PID=$!
+echo "WebUI PID: $WEBUI_PID"
 
-# Phase 5: Final status
-echo "=== Final Status ===" >> $LOG
-echo "Docker:" >> $LOG
-sudo docker ps >> $LOG 2>&1 || true
-echo "Ports:" >> $LOG
-ss -tlnp >> $LOG 2>&1 || true
-echo "=== $(date) Setup complete ===" >> $LOG
+# Wait for WebUI
+for i in $(seq 1 20); do
+  if curl -s http://localhost:8648 >/dev/null 2>&1; then
+    echo "hermes-web-ui ready after ${i}x2s"
+    break
+  fi
+  sleep 2
+done
+
+# Final status
+echo "=== Port check ==="
+ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null || echo "no port tool"
+echo "=== $(date) Setup complete ==="
