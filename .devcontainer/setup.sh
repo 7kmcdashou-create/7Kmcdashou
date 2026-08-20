@@ -9,10 +9,17 @@ pip install hermes-agent
 # Verify install
 hermes --version
 
+# Install cloudflared for public tunnel
+if ! command -v cloudflared &>/dev/null; then
+    curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
+    chmod +x /usr/local/bin/cloudflared
+    echo "cloudflared installed: $(cloudflared --version)"
+fi
+
 # Create config directory
 mkdir -p ~/.hermes
 
-# Write config.yaml - Hermes Agent with custom provider + dashboard auth
+# Write config.yaml
 cat > ~/.hermes/config.yaml << 'HERMES_CFG'
 model: sensenova/sensenova-6.7-flash-lite
 
@@ -35,7 +42,6 @@ cat > ~/.hermes/.env << 'HERMES_ENV'
 OPENAI_API_KEY=sk-Ui5cfObCJhJUbcsJSWJOUmZeabOIgPvm
 HERMES_ENV
 
-# Set permissions
 chmod 600 ~/.hermes/.env
 
 echo "=== Hermes setup completed at $(date) ==="
