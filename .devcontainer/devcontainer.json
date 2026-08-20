@@ -5,6 +5,5 @@
     9119,
     8648
   ],
-  "remoteUser": "vscode",
-  "postStartCommand": "nohup bash /workspaces/7Kmcdashou/start_services.sh >/dev/null 2>&1 &"
+  "remoteUser": "vscode"
 }
